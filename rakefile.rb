@@ -52,3 +52,28 @@ namespace RUBY_FOLDER do
     }
 end
 
+
+def write_input_file (task, data_file)
+  File.open(input_file(task), 'w'){|file| file << File.new(data_file).read }
+end
+
+def diff_outputs_files (task, sample_file)
+  result = File.new(output_file(task)).read.chomp
+  sample = File.new(sample_file).read.chomp
+  result == sample
+end
+
+task :test, :lang, :number do |t, args|
+  task = "task" + args[:number]
+  task_path = "#{args[:lang]}:#{task}"
+  inputs_files = FileList[File.join(TESTS, task, '/Inputs/*')]
+
+  inputs_files.each { |data|
+    write_input_file task, data
+    Rake::Task[task_path].execute
+    puts diff_outputs_files task, File.join(TESTS, task, '/Outputs/', File.split(data).last)
+  }
+end
+
+
+
